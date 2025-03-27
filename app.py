@@ -1,3 +1,4 @@
+
 import os
 import re
 import json
@@ -248,10 +249,9 @@ if valid_files:
 
         st.subheader("Data Visualization")
 
-        # Let user choose a chart type
+        
         chart_type = st.selectbox("Select Chart Type", ["Line Chart", "Bar Chart", "Histogram", "Scatter Plot", "Box Plot"], key="chart_type")
 
-        # For Histogram, we only need one numeric column. For others, we need X and Y.
         if chart_type == "Histogram":
             num_col = st.selectbox("Select Column for Histogram", options=df_cleaned.select_dtypes(include=["number"]).columns.tolist(), key="hist_column")
         else:
@@ -262,14 +262,13 @@ if valid_files:
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots(figsize=(10, 5))
             if chart_type == "Line Chart":
-                # Sort by x_axis to produce a meaningful line plot
+                
                 sorted_df = df_cleaned.sort_values(by=x_axis)
                 ax.plot(sorted_df[x_axis], sorted_df[y_axis])
                 ax.set_xlabel(x_axis)
                 ax.set_ylabel(y_axis)
                 ax.set_title(f"Line Chart of {y_axis} vs {x_axis}")
             elif chart_type == "Bar Chart":
-                # For a bar chart, group by x_axis and compute the mean of y_axis
                 grouped = df_cleaned.groupby(x_axis)[y_axis].mean().reset_index()
                 ax.bar(grouped[x_axis], grouped[y_axis])
                 ax.set_xlabel(x_axis)
@@ -286,7 +285,6 @@ if valid_files:
                 ax.set_ylabel(y_axis)
                 ax.set_title(f"Scatter Plot of {y_axis} vs {x_axis}")
             elif chart_type == "Box Plot":
-                # Box plot for a single numeric variable
                 ax.boxplot(df_cleaned[y_axis])
                 ax.set_xlabel(y_axis)
                 ax.set_title(f"Box Plot of {y_axis}")
