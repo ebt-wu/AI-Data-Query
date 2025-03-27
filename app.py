@@ -220,9 +220,6 @@ if valid_files:
             st.dataframe(df_cleaned if display_all else df_cleaned.head(n_rows))
         
         st.markdown("---")
-        st.info(f"Debug Info: Cleaned Data Shape: {df_cleaned.shape}")
-        st.info(f"Debug Info: Columns: {df_cleaned.columns.tolist()}")
-
     
         st.subheader("Statistical Analysis")
         numeric_cols = df_cleaned.select_dtypes(include=["number"]).columns.tolist()
@@ -249,7 +246,52 @@ if valid_files:
         else:
             st.warning("No numeric columns available for statistical analysis.")
 
- 
+        st.subheader("Data Visualization")
+
+        # Let user choose a chart type
+        chart_type = st.selectbox("Select Chart Type", ["Line Chart", "Bar Chart", "Histogram", "Scatter Plot", "Box Plot"], key="chart_type")
+
+        # For Histogram, we only need one numeric column. For others, we need X and Y.
+        if chart_type == "Histogram":
+            num_col = st.selectbox("Select Column for Histogram", options=df_cleaned.select_dtypes(include=["number"]).columns.tolist(), key="hist_column")
+        else:
+            x_axis = st.selectbox("Select X-axis", options=df_cleaned.columns.tolist(), key="viz_x_axis")
+            y_axis = st.selectbox("Select Y-axis", options=df_cleaned.select_dtypes(include=["number"]).columns.tolist(), key="viz_y_axis")
+
+        if st.button("Generate Chart"):
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(figsize=(10, 5))
+            if chart_type == "Line Chart":
+                # Sort by x_axis to produce a meaningful line plot
+                sorted_df = df_cleaned.sort_values(by=x_axis)
+                ax.plot(sorted_df[x_axis], sorted_df[y_axis])
+                ax.set_xlabel(x_axis)
+                ax.set_ylabel(y_axis)
+                ax.set_title(f"Line Chart of {y_axis} vs {x_axis}")
+            elif chart_type == "Bar Chart":
+                # For a bar chart, group by x_axis and compute the mean of y_axis
+                grouped = df_cleaned.groupby(x_axis)[y_axis].mean().reset_index()
+                ax.bar(grouped[x_axis], grouped[y_axis])
+                ax.set_xlabel(x_axis)
+                ax.set_ylabel(f"Average {y_axis}")
+                ax.set_title(f"Bar Chart of {y_axis} by {x_axis}")
+            elif chart_type == "Histogram":
+                ax.hist(df_cleaned[num_col], bins=20)
+                ax.set_xlabel(num_col)
+                ax.set_ylabel("Frequency")
+                ax.set_title(f"Histogram of {num_col}")
+            elif chart_type == "Scatter Plot":
+                ax.scatter(df_cleaned[x_axis], df_cleaned[y_axis])
+                ax.set_xlabel(x_axis)
+                ax.set_ylabel(y_axis)
+                ax.set_title(f"Scatter Plot of {y_axis} vs {x_axis}")
+            elif chart_type == "Box Plot":
+                # Box plot for a single numeric variable
+                ax.boxplot(df_cleaned[y_axis])
+                ax.set_xlabel(y_axis)
+                ax.set_title(f"Box Plot of {y_axis}")
+            st.pyplot(fig)
+
         st.subheader("Ask me anything about the data")
         ops = ["Filter", "Find Row", "Sort", "Custom Query"]
         default_op = st.session_state.get("desired_operation", "Filter")
@@ -324,6 +366,7 @@ if valid_files:
                     feedback = st.radio("Was this answer helpful?", ["Yes", "No"], key="feedback")
                     if feedback:
                         st.write(f"Thanks for your feedback: {feedback}")
+        
         
         
         st.markdown("---")
